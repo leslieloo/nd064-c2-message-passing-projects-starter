@@ -76,12 +76,19 @@ Type `exit` to exit the virtual OS and you will find yourself back in your compu
 Afterwards, you can test that `kubectl` works by running a command like `kubectl describe services`. It should not return any errors.
 
 ### Steps
+Previous monolith REST Api service is refactored into 2 microservice REST Api - Person & Connection. Location Service message passing is reimplemented using gRPC & Kafka.
+
+Run the following K8s yaml file:-
 1. `kubectl apply -f deployment/db-configmap.yaml` - Set up environment variables for the pods
 2. `kubectl apply -f deployment/db-secret.yaml` - Set up secrets for the pods
 3. `kubectl apply -f deployment/postgres.yaml` - Set up a Postgres database running PostGIS
-4. `kubectl apply -f deployment/udaconnect-api.yaml` - Set up the service and deployment for the API
+4. `kubectl apply -f deployment/kafka.yaml` - Set up service & deployment for kafka components (kafka broker, zookeeper) and related environment variables
 5. `kubectl apply -f deployment/udaconnect-app.yaml` - Set up the service and deployment for the web app
-6. `sh scripts/run_db_command.sh <POD_NAME>` - Seed your database against the `postgres` pod. (`kubectl get pods` will give you the `POD_NAME`)
+6. `kubectl apply -f deployment/udaconnect-person-api.yaml` - Set up the service and deployment for Person API
+7. `kubectl apply -f deployment/udaconnect-connection-api.yaml` - Set up the service and deployment for Connection API
+8. `kubectl apply -f deployment/udaconnect-location-producer.yaml` - Set up the service and deployment for the location producer service that used gRPC and save events as Kafka message. Provide python script `client.py` to send sample location events
+9. `kubectl apply -f deployment/udaconnect-location-consumer.yaml` - Set up the service and deployment for the location consumer service that process Kafka message and save into postgres database
+10. `sh scripts/run_db_command.sh <POD_NAME>` - Seed your database against the `postgres` pod. (`kubectl get pods` will give you the `POD_NAME`)
 
 Manually applying each of the individual `yaml` files is cumbersome but going through each step provides some context on the content of the starter project. In practice, we would have reduced the number of steps by running the command against a directory to apply of the contents: `kubectl apply -f deployment/`.
 
@@ -89,13 +96,16 @@ Note: The first time you run this project, you will need to seed the database wi
 
 ### Verifying it Works
 Once the project is up and running, you should be able to see 3 deployments and 3 services in Kubernetes:
-`kubectl get pods` and `kubectl get services` - should both return `udaconnect-app`, `udaconnect-api`, and `postgres`
-
+`kubectl get pods` and `kubectl get services` - should both return `udaconnect-app`, `udaconnect-kafka`, `postgres`, `udaconnect-person-api`, `udaconnect-connection-api`, `udaconnect-location-producer`, and `udaconnect-location-consumer`
 
 These pages should also load on your web browser:
-* `http://localhost:30001/` - OpenAPI Documentation
-* `http://localhost:30001/api/` - Base path for API
 * `http://localhost:30000/` - Frontend ReactJS Application
+* `http://localhost:30002/` - Person API OpenAPI Documentation
+* `http://localhost:30002/api/` - Base path for Person API
+* `http://localhost:30003/` - Connection API OpenAPI Documentation
+* `http://localhost:30003/api/` - Base path for Connection API
+
+To simulate mobile client events, get the pod_id for pods created from deployment `udaconnect-location-producer`. Then run `kubectl exec <pod_id> -- python client.py` to send 10 sample location event to location consumer service to be processed and stored into Kafka Topic
 
 #### Deployment Note
 You may notice the odd port numbers being served to `localhost`. [By default, Kubernetes services are only exposed to one another in an internal network](https://kubernetes.io/docs/concepts/services-networking/service/). This means that `udaconnect-app` and `udaconnect-api` can talk to one another. For us to connect to the cluster as an "outsider", we need to a way to expose these services to `localhost`.
@@ -113,7 +123,7 @@ As a reminder, each module should have:
 4. `__init__.py`
 
 ### Docker Images
-`udaconnect-app` and `udaconnect-api` use docker images from `isjustintime/udaconnect-app` and `isjustintime/udaconnect-api`. To make changes to the application, build your own Docker image and push it to your own DockerHub repository. Replace the existing container registry path with your own.
+All docker images comes from DockerHub repository `leslieloo`. To make changes to the application, build your own Docker image and push it to your own DockerHub repository. Replace the existing container registry path with your own.
 
 ## Configs and Secrets
 In `deployment/db-secret.yaml`, the secret variable is `d293aW1zb3NlY3VyZQ==`. The value is simply encoded and not encrypted -- this is ***not*** secure! Anyone can decode it to see what it is.
@@ -125,6 +135,18 @@ echo "d293aW1zb3NlY3VyZQ==" | base64 -d
 echo "hotdogsfordinner" | base64
 ```
 This is okay for development against an exclusively local environment and we want to keep the setup simple so that you can focus on the project tasks. However, in practice we should not commit our code with secret values into our repository. A CI/CD pipeline can help prevent that.
+
+Kafka related environment variable (bootstrap server url and topic name) is stored inside K8s yaml `deployment\kafka.yaml` ConfigMap object. Feel free to change the value where applicable.
+
+```
+apiVersion: v1
+kind: ConfigMap
+data:
+  KAFKA_URL: "udaconnect-kafka.default.svc:9092"
+  KAFKA_TOPIC: "locations"
+metadata:
+  name: kafka-env
+```
 
 ## PostgreSQL Database
 The database uses a plug-in named PostGIS that supports geographic queries. It introduces `GEOMETRY` types and functions that we leverage to calculate distance between `ST_POINT`'s which represent latitude and longitude.
@@ -146,6 +168,8 @@ Your architecture diagram should focus on the services and how they talk to one 
 1. [Lucidchart](https://www.lucidchart.com/pages/)
 2. [Google Docs](docs.google.com) Drawings (In a Google Doc, _Insert_ - _Drawing_ - _+ New_)
 3. [Diagrams.net](https://app.diagrams.net/)
+
+![](docs/architecture_design.png)
 
 ## Tips
 * We can access a running Docker container using `kubectl exec -it <pod_id> sh`. From there, we can `curl` an endpoint to debug network issues.
