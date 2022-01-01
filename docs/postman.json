@@ -1,0 +1,116 @@
+{
+	"variables": [],
+	"info": {
+		"name": "UdaConnect",
+		"_postman_id": "0df28cca-a30f-4ffd-1f4b-68c0dbda9e99",
+		"description": "Test modified UdaConnect api - Person & Connection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Person API - Get all persons",
+			"request": {
+				"url": "http://localhost:30002/api/persons",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": "Person API - Get all persons"
+			},
+			"response": []
+		},
+		{
+			"name": "Person API - create new person",
+			"request": {
+				"url": "http://localhost:30002/api/persons",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"first_name\": \"Tony\",\n    \"last_name\": \"Stark\",\n    \"company_name\": \"Stark Industries\"\n}"
+				},
+				"description": "Person API - create new person"
+			},
+			"response": []
+		},
+		{
+			"name": "Person API - Get a person",
+			"request": {
+				"url": "http://localhost:30002/api/persons/5",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"first_name\": \"Tony\",\n    \"last_name\": \"Stark\",\n    \"company_name\": \"Stark Industries\"\n}"
+				},
+				"description": "Person API - get person details (Taco Fargo)"
+			},
+			"response": []
+		},
+		{
+			"name": "Connection API - Get person's connections",
+			"request": {
+				"url": {
+					"raw": "http://localhost:30003/api/persons/5/connection?distance=10&start_date=2020-01-01&end_date=2020-12-31",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "30003",
+					"path": [
+						"api",
+						"persons",
+						"5",
+						"connection"
+					],
+					"query": [
+						{
+							"key": "distance",
+							"value": "10",
+							"equals": true,
+							"description": ""
+						},
+						{
+							"key": "start_date",
+							"value": "2020-01-01",
+							"equals": true,
+							"description": ""
+						},
+						{
+							"key": "end_date",
+							"value": "2020-12-31",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"first_name\": \"Tony\",\n    \"last_name\": \"Stark\",\n    \"company_name\": \"Stark Industries\"\n}"
+				},
+				"description": "Connection API - get person (Taco Fargo) connections"
+			},
+			"response": []
+		}
+	]
+}

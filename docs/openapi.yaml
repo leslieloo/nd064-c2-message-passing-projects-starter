@@ -1,0 +1,63 @@
+openapi: 3.0.0
+info:
+  description: UdaConnect Person API
+  version: "1.0.0"
+  title: Person API
+paths:
+  /api/person/{person_id}:
+    get:
+      summary: Retrieve a person information
+      operationId: getPerson
+      description: By passing person_id you can get the person information
+      parameters:
+        - in: path
+          name: person_id
+          schema:
+            type: integer
+          required: true
+          description: Person ID
+      responses:
+        '200':
+          description: Successfully retrieved a person information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/person'
+        '500':
+          description: Internal Server Error
+  /api/person:
+    get:
+      summary: Retrieve all person information as list
+      operationId: getPersons
+      description: retrieve all person informations
+      responses:
+        '200':
+          description: Successfully retrieved all person informations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/person'
+        '500':
+          description: Internal Server Error
+components:
+  schemas:
+    person:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - id
+        - company_name
+      properties:
+        first_name:
+          type: string
+          example: "Tony"
+        last_name:
+          type: string
+          example: "Stark"
+        id:
+          type: integer
+          example: 1
+        company_name:
+         type: string
+         example: "Stark Industries"
