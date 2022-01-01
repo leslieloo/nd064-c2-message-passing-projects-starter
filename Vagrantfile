@@ -27,6 +27,7 @@ Vagrant.configure("2") do |config|
     master.vm.provider "virtualbox" do |v|
       v.memory = "3072"
       v.name = "master"
+      v.cpus = 2
       end
     master.vm.provision "shell", inline: <<-SHELL
       sudo zypper refresh
