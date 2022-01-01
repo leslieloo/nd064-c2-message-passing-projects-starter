@@ -14,11 +14,12 @@ def run_app(env=None):
 
     from app.udaconnect.services import LocationService as svc, Location
 
-    for msg in consumer:
-        loc_msg = json.loads(msg.value.decode('utf-8'))
-        logger.info(loc_msg)
+    while (True):
+        for msg in consumer:
+            loc_msg = json.loads(msg.value.decode('utf-8'))
+            logger.info(loc_msg)
 
-        location:Location = svc.create(loc_msg)
+            location:Location = svc.create(loc_msg)
 
 if __name__ == "__main__":
     run_app(os.getenv("FLASK_ENV") or "test")
